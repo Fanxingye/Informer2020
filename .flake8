@@ -1,0 +1,10 @@
+[flake8]
+ignore = W504, E126, E251
+max-line-length = 160
+show-source = False
+application-import-names = Informer
+exclude =
+    .git
+    docs/
+    venv/
+    build/

@@ -244,7 +244,7 @@ if args.data in data_parser.keys():
     args.data_path = data_info['data']
     args.target = data_info['T']
     args.enc_in, args.dec_in, args.c_out = data_info[args.features]
-
+# enc_in and dec_in are same values
 args.s_layers = [int(s_l) for s_l in args.s_layers.replace(' ', '').split(',')]
 args.detail_freq = args.freq
 args.freq = args.freq[-1:]

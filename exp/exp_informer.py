@@ -295,6 +295,8 @@ class Exp_Informer(Exp_Basic):
                  batch_y.shape[-1]]).float()
         dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp],
                             dim=1).float().to(self.device)
+        print(f"batch_x shape {batch_x.shape}")
+        print(f"dec_inp shape {dec_inp.shape}")
         # encoder - decoder
         if self.args.use_amp:
             with torch.cuda.amp.autocast():

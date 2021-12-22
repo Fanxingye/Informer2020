@@ -66,18 +66,22 @@ class ProbAttention(nn.Module):
             L_K, (L_Q, sample_k))  # real U = U_part(factor*ln(L_k))*L_q
         K_sample = K_expand[:, :,
                             torch.arange(L_Q).unsqueeze(1), index_sample, :]
+        # K_sample: [B, H, L_Q, sample_k, E]
         Q_K_sample = torch.matmul(Q.unsqueeze(-2), K_sample.transpose(
             -2, -1)).squeeze()  # [B, H, L_Q, sample_k]
         # print(f"L_K : {L_K}, sample_k: {sample_k}")
         # find the Top_k query with sparisty measurement
         M = Q_K_sample.max(-1)[0] - torch.div(Q_K_sample.sum(-1), L_K)
-        M_top = M.topk(n_top, sorted=False)[1]
+        M_top = M.topk(n_top, sorted=False)[1] # M_top: [B, H, n_top]
+
 
         # use the reduced Q to calculate Q_K
         Q_reduce = Q[torch.arange(B)[:, None, None],
                      torch.arange(H)[None, :, None],
                      M_top, :]  # factor*ln(L_q)
+        # Q_reduce: [B, H, n_top, E]
         Q_K = torch.matmul(Q_reduce, K.transpose(-2, -1))  # factor*ln(L_q)*L_k
+        # Q_K: [B, H, n_top, L_K]
 
         return Q_K, M_top
 
@@ -85,23 +89,26 @@ class ProbAttention(nn.Module):
         B, H, L_V, D = V.shape
         if not self.mask_flag:
             # V_sum = V.sum(dim=-2)
-            V_sum = V.mean(dim=-2)
+            V_sum = V.mean(dim=-2) # V_sum: [B, H, D]
             contex = V_sum.unsqueeze(-2).expand(B, H, L_Q,
-                                                V_sum.shape[-1]).clone()
+                                                V_sum.shape[-1]).clone() # contex: [B, H, L_Q, D]
         else:  # use mask
             assert (L_Q == L_V
                     )  # requires that L_Q == L_V, i.e. for self-attention only
-            contex = V.cumsum(dim=-2)
+            contex = V.cumsum(dim=-2) # contex: [B, H, L_Q, D]
         return contex
 
     def _update_context(self, context_in, V, scores, index, L_Q, attn_mask):
         B, H, L_V, D = V.shape
-
+        
         if self.mask_flag:
             attn_mask = ProbMask(B, H, L_Q, index, scores, device=V.device)
+            # attn_mask: [B, H, n_top, L_K]
             scores.masked_fill_(attn_mask.mask, -np.inf)
+            # scores: [B, H, n_top, L_K]
 
         attn = torch.softmax(scores, dim=-1)  # nn.Softmax(dim=-1)(scores)
+        # attn: [B, H, n_top, L_K] L_K == L_V
 
         context_in[torch.arange(B)[:, None, None],
                    torch.arange(H)[None, :, None],
@@ -111,6 +118,7 @@ class ProbAttention(nn.Module):
                 attn.device)
             attns[torch.arange(B)[:, None, None],
                   torch.arange(H)[None, :, None], index, :] = attn
+            # context_in: [B, H, n_top, D],  attns: [B, H, L_V, L_V]
             return (context_in, attns)
         else:
             return (context_in, None)

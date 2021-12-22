@@ -85,7 +85,6 @@ class Dataset_ETT_hour(Dataset):
         data_stamp = time_features(df_stamp,
                                    timeenc=self.timeenc,
                                    freq=self.freq)
-        print(data_stamp.shape)
 
         self.data_x = data[border1:border2]
         if self.inverse:
@@ -192,6 +191,7 @@ class Dataset_ETT_minute(Dataset):
         data_stamp = time_features(df_stamp,
                                    timeenc=self.timeenc,
                                    freq=self.freq)
+        print(f"data_stamp shape: {data_stamp.shape}")
 
         self.data_x = data[border1:border2]
         if self.inverse:
@@ -443,7 +443,7 @@ class Dataset_Pred(Dataset):
             seq_y = self.data_y[r_begin:r_begin + self.label_len]
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
-
+        # seq_y 与 seq_y_mark长度不一致
         return seq_x, seq_y, seq_x_mark, seq_y_mark
 
     def __len__(self):

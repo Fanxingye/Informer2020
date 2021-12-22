@@ -56,8 +56,8 @@ class EncoderLayer(nn.Module):
         x = x + self.dropout(new_x)
 
         y = x = self.norm1(x)
-        y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
-        y = self.dropout(self.conv2(y).transpose(-1, 1))
+        y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1)))) # [B, 4D, L]
+        y = self.dropout(self.conv2(y).transpose(-1, 1)) # [B, 4D, L]
 
         return self.norm2(x + y), attn
 
